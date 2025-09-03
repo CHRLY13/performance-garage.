@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vehículos — Performance Garage</title><link rel="stylesheet" href="css/style.css"></head>
+<body><header class="topbar"><div class="brand">Performance Garage</div><nav class="nav">
+<a href="index.html">Inicio</a><a href="clientes.html">Clientes</a><a href="vehiculos.html" class="active">Vehículos</a>
+<a href="servicios.html">Servicios</a><a href="diagnostico.html">Diagnóstico</a><a href="recepcion.html">Recepción</a><a href="nota.html">Nota de venta</a></nav></header>
+<main class="container"><h1>Vehículos</h1>
+<form id="vehiculoForm" class="card form"><div class="row">
+<label>Cliente <select name="cliente"></select></label>
+<label>Marca <input name="marca" required></label>
+<label>Modelo <input name="modelo" required></label>
+<label>Año <input name="anio" type="number" required></label>
+<label>Placas <input name="placas"></label>
+<label>VIN <input name="vin"></label>
+</div><button class="btn">Guardar vehículo</button></form>
+<section><h2>Listado</h2><table class="table" id="vehiculosTable">
+<thead><tr><th>Cliente</th><th>Marca</th><th>Modelo</th><th>Año</th><th>Placas</th><th>VIN</th><th></th></tr></thead><tbody></tbody></table></section>
+</main>
+<script src="js/storage.js"></script>
+<script>
+const form = document.getElementById('vehiculoForm'); const selCliente = form.querySelector('select[name=cliente]'); const tbody = document.querySelector('#vehiculosTable tbody');
+function loadClientes(){ selCliente.innerHTML = '<option value="" disabled selected>Elige cliente</option>';
+  Storage.getAll('clientes').forEach(c=>{ const opt=document.createElement('option'); opt.value=c.telefono; opt.textContent=c.nombre+' ('+c.telefono+')'; selCliente.appendChild(opt); });}
+function render(){ tbody.innerHTML=''; Storage.getAll('vehiculos').forEach((v,i)=>{ const tr=document.createElement('tr');
+  tr.innerHTML = `<td>${v.cliente}</td><td>${v.marca}</td><td>${v.modelo}</td><td>${v.anio}</td><td>${v.placas||''}</td><td>${v.vin||''}</td>
+  <td><button data-i="${i}" class="btn-out">Eliminar</button></td>`; tbody.appendChild(tr); });}
+form.addEventListener('submit', e=>{ e.preventDefault(); const data=Object.fromEntries(new FormData(form).entries());
+  Storage.add('vehiculos', data); form.reset(); render(); });
+tbody.addEventListener('click', e=>{ if(e.target.matches('button[data-i]')){ Storage.removeAt('vehiculos', +e.target.dataset.i); render(); }});
+loadClientes(); render();
+</script></body></html>

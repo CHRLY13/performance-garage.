@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recepción — Performance Garage</title><link rel="stylesheet" href="css/style.css"></head>
+<body><header class="topbar"><div class="brand">Performance Garage</div><nav class="nav">
+<a href="index.html">Inicio</a><a href="clientes.html">Clientes</a><a href="vehiculos.html">Vehículos</a>
+<a href="servicios.html">Servicios</a><a href="diagnostico.html">Diagnóstico</a><a href="recepcion.html" class="active">Recepción</a><a href="nota.html">Nota de venta</a></nav></header>
+<main class="container"><h1>Recepción del vehículo (firma)</h1>
+<form id="recForm" class="card form"><div class="row">
+<label>Cliente <select name="cliente"></select></label>
+<label>Vehículo <select name="vehiculo"></select></label>
+<label>Fecha y hora <input type="datetime-local" name="fecha" required></label>
+<label>Servicios solicitados <input name="solicitados" placeholder="Ej: Diagnóstico de frenos..."></label>
+</div>
+<p class="muted">“Autorizo a Performance Garage a realizar diagnóstico y servicio al vehículo descrito en este documento, bajo los términos acordados verbalmente o por mensaje. Me comprometo a revisar el trabajo realizado al momento de la entrega.”</p>
+<div class="sig-wrap"><canvas id="pad" width="520" height="180"></canvas>
+<div class="sig-actions"><button type="button" id="limpiar" class="btn-out">Limpiar</button></div></div>
+<button class="btn" type="submit">Guardar recepción (PDF/Imprimir)</button>
+</form></main>
+<script src="js/storage.js"></script>
+<script>
+const selC=document.querySelector('select[name=cliente]'); const selV=document.querySelector('select[name=vehiculo]');
+function loadSel(){ selC.innerHTML=''; Storage.getAll('clientes').forEach(c=>{ const o=document.createElement('option'); o.value=c.nombre; o.textContent=`${c.nombre} (${c.telefono})`; selC.appendChild(o); });
+  selV.innerHTML=''; Storage.getAll('vehiculos').forEach(v=>{ const o=document.createElement('option'); o.value=`${v.marca} ${v.modelo} ${v.anio} ${v.placas||''}`; o.textContent=o.value; selV.appendChild(o); });}
+const canvas=document.getElementById('pad'); const ctx=canvas.getContext('2d'); let drawing=false;
+canvas.addEventListener('pointerdown', e=>{drawing=true; ctx.moveTo(e.offsetX,e.offsetY)});
+canvas.addEventListener('pointermove', e=>{ if(drawing){ ctx.lineTo(e.offsetX,e.offsetY); ctx.strokeStyle='#e53935'; ctx.lineWidth=2; ctx.stroke(); }});
+canvas.addEventListener('pointerup', ()=>drawing=false);
+document.getElementById('limpiar').addEventListener('click', ()=>ctx.clearRect(0,0,canvas.width,canvas.height));
+document.getElementById('recForm').addEventListener('submit', e=>{
+  e.preventDefault(); const fd=new FormData(e.target); const data=Object.fromEntries(fd.entries()); data.firma=canvas.toDataURL('image/png');
+  Storage.add('recepciones', data);
+  const w=window.open('', '_blank');
+  w.document.write(`<html><head><title>Recepción</title></head><body>
+  <h2>Performance Garage — Recepción de vehículo</h2>
+  <p><b>Cliente:</b> ${data.cliente}<br><b>Vehículo:</b> ${data.vehiculo}<br><b>Fecha:</b> ${data.fecha}<br><b>Servicios solicitados:</b> ${data.solicitados||''}</p>
+  <p>“Autorizo a Performance Garage a realizar diagnóstico y servicio al vehículo descrito en este documento, bajo los términos acordados verbalmente o por mensaje. Me comprometo a revisar el trabajo realizado al momento de la entrega.”</p>
+  <img src='${data.firma}' style='border:1px solid #aaa; width:300px; height:auto'/><div>Firma del cliente</div>
+  </body></html>`); w.document.close(); w.focus(); w.print();
+});
+loadSel();
+</script></body></html>
