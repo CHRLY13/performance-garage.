@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico — Performance Garage</title><link rel="stylesheet" href="css/style.css"></head>
+<body><header class="topbar"><div class="brand">Performance Garage</div><nav class="nav">
+<a href="index.html">Inicio</a><a href="clientes.html">Clientes</a><a href="vehiculos.html">Vehículos</a>
+<a href="servicios.html">Servicios</a><a href="diagnostico.html" class="active">Diagnóstico</a><a href="recepcion.html">Recepción</a><a href="nota.html">Nota de venta</a></nav></header>
+<main class="container"><h1>Enviar diagnóstico por WhatsApp</h1>
+<form id="diagForm" class="card form">
+<label>Cliente <select name="cliente"></select></label>
+<label>Vehículo <select name="vehiculo"></select></label>
+<label>Fallas detectadas <textarea name="fallas" rows="5" placeholder="Describe el diagnóstico..."></textarea></label>
+<button class="btn" type="submit">Generar y abrir WhatsApp</button>
+</form></main>
+<script src="js/storage.js"></script>
+<script>
+const selCliente=document.querySelector('select[name=cliente]'); const selVeh=document.querySelector('select[name=vehiculo]');
+function load(){ selCliente.innerHTML=''; Storage.getAll('clientes').forEach(c=>{ const o=document.createElement('option'); o.value=c.telefono; o.textContent=`${c.nombre} (${c.telefono})`; selCliente.appendChild(o); });
+  selVeh.innerHTML=''; Storage.getAll('vehiculos').forEach((v)=>{ const o=document.createElement('option'); o.value=`${v.marca} ${v.modelo} ${v.anio}`; o.textContent=o.value; selVeh.appendChild(o); });}
+document.getElementById('diagForm').addEventListener('submit', e=>{
+  e.preventDefault(); const fd=new FormData(e.target); const tel=fd.get('cliente').replace(/\D/g,''); const veh=fd.get('vehiculo'); const fallas=fd.get('fallas')||'';
+  const texto = `🛠️ Performance Garage%0A`+`Diagnóstico listo:%0A`+`Fallas: ${encodeURIComponent(fallas)}%0A`+`Vehículo: ${encodeURIComponent(veh)}%0A%0A`+`En breve confirmamos el trabajo. Gracias.`;
+  const url=`https://wa.me/52${tel}?text=${texto}`; window.open(url, '_blank');
+});
+load();
+</script></body></html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Servicios — Performance Garage</title><link rel="stylesheet" href="css/style.css"></head>
+<body><header class="topbar"><div class="brand">Performance Garage</div><nav class="nav">
+<a href="index.html">Inicio</a><a href="clientes.html">Clientes</a><a href="vehiculos.html">Vehículos</a>
+<a href="servicios.html" class="active">Servicios</a><a href="diagnostico.html">Diagnóstico</a><a href="recepcion.html">Recepción</a><a href="nota.html">Nota de venta</a></nav></header>
+<main class="container"><h1>Servicios</h1>
+<form id="servForm" class="card form"><div class="row">
+<label>Vehículo <select name="vehiculo"></select></label>
+<label>Servicio <select name="tipo"><option>Afinación</option><option>Frenos</option><option>Suspensión</option></select></label>
+<label>Costo mano de obra <input type="number" name="mano" value="0"></label>
+<label>Costo refacciones <input type="number" name="refs" value="0"></label>
+<label>Notas <input name="notas"></label>
+<label>Fotos (opcional) <input type="file" name="fotos" multiple accept="image/*"></label>
+</div><button class="btn">Guardar servicio</button></form>
+<section><h2>Historial</h2><table class="table" id="servTable">
+<thead><tr><th>Vehículo</th><th>Servicio</th><th>MO</th><th>Refs</th><th>Total</th><th>Notas</th><th></th></tr></thead><tbody></tbody></table></section>
+</main>
+<script src="js/storage.js"></script>
+<script>
+const selVeh=document.querySelector('select[name=vehiculo]'); const form=document.getElementById('servForm'); const tbody=document.querySelector('#servTable tbody');
+function loadVeh(){ selVeh.innerHTML=''; Storage.getAll('vehiculos').forEach((v,i)=>{ const opt=document.createElement('option'); opt.value=i; opt.textContent=`${v.cliente} - ${v.marca} ${v.modelo} ${v.anio}`; selVeh.appendChild(opt); });}
+function render(){ tbody.innerHTML=''; Storage.getAll('servicios').forEach((s,i)=>{ const tr=document.createElement('tr'); const total=(+s.mano||0)+(+s.refs||0);
+  tr.innerHTML=`<td>${s.vehiculoTxt}</td><td>${s.tipo}</td><td>$${s.mano}</td><td>$${s.refs}</td><td><b>$${total}</b></td><td>${s.notas||''}</td>
+  <td><button data-i="${i}" class="btn-out">Eliminar</button></td>`; tbody.appendChild(tr); });}
+form.addEventListener('submit', async e=>{
+  e.preventDefault(); const fd=new FormData(form); const veh=Storage.getAll('vehiculos')[+fd.get('vehiculo')];
+  const files=form.fotos.files; const fotos=[];
+  for (let file of files){ const buf=await file.arrayBuffer(); const blob=new Blob([buf],{type:file.type}); const rd=new FileReader(); const p=new Promise(res=>{rd.onload=()=>res(rd.result)}); rd.readAsDataURL(blob); fotos.push(await p); }
+  const data={ vehiculoTxt:`${veh.cliente} - ${veh.marca} ${veh.modelo} ${veh.anio}`, tipo:fd.get('tipo'), mano:fd.get('mano'), refs:fd.get('refs'), notas:fd.get('notas'), fotos };
+  Storage.add('servicios', data); form.reset(); render();
+});
+tbody.addEventListener('click', e=>{ if(e.target.matches('button[data-i]')){ Storage.removeAt('servicios', +e.target.dataset.i); render(); } });
+loadVeh(); render();
+</script></body></html>

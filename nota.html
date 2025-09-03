@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nota de venta — Performance Garage</title><link rel="stylesheet" href="css/style.css"></head>
+<body><header class="topbar"><div class="brand">Performance Garage</div><nav class="nav">
+<a href="index.html">Inicio</a><a href="clientes.html">Clientes</a><a href="vehiculos.html">Vehículos</a>
+<a href="servicios.html">Servicios</a><a href="diagnostico.html">Diagnóstico</a><a href="recepcion.html">Recepción</a><a href="nota.html" class="active">Nota de venta</a></nav></header>
+<main class="container"><h1>Generar nota de venta</h1>
+<form id="notaForm" class="card form">
+<label>Servicio <select name="servicio"></select></label>
+<label>Método de pago <select name="pago"><option>Efectivo</option><option>Tarjeta</option><option>Transferencia</option></select></label>
+<label>Observaciones <input name="obs" placeholder="Opcional"></label>
+<button class="btn" type="submit">Generar PDF / Imprimir</button>
+</form></main>
+<script src="js/storage.js"></script>
+<script>
+const sel=document.querySelector('select[name=servicio]');
+function load(){ sel.innerHTML=''; Storage.getAll('servicios').forEach((s,i)=>{ const opt=document.createElement('option'); const total=(+s.mano||0)+(+s.refs||0);
+  opt.value=i; opt.textContent=s.vehiculoTxt+' — '+s.tipo+' — $'+total; sel.appendChild(opt); }); }
+document.getElementById('notaForm').addEventListener('submit', e=>{
+  e.preventDefault(); const idx=+new FormData(e.target).get('servicio'); const s=Storage.getAll('servicios')[idx]; const total=(+s.mano||0)+(+s.refs||0);
+  const pago=new FormData(e.target).get('pago'); const obs=new FormData(e.target).get('obs')||'';
+  const w=window.open('','_blank'); w.document.write(`
+  <html><head><title>Nota de venta</title><style>
+  body{font-family:Arial; margin:24px} h2{margin:0 0 16px 0} table{width:100%; border-collapse:collapse; margin-top:12px}
+  th,td{border:1px solid #999; padding:8px; text-align:left} .foot{margin-top:18px; font-style:italic}
+  </style></head><body>
+  <h2>Performance Garage — Nota de Venta</h2><div><b>Fecha:</b> ${new Date().toLocaleString()}</div>
+  <div><b>Vehículo:</b> ${s.vehiculoTxt}</div>
+  <table><thead><tr><th>Concepto</th><th>Importe</th></tr></thead><tbody>
+  <tr><td>${s.tipo} — Mano de obra</td><td>$${s.mano}</td></tr>
+  <tr><td>${s.tipo} — Refacciones</td><td>$${s.refs}</td></tr>
+  <tr><td><b>Total</b></td><td><b>$${total}</b></td></tr>
+  </tbody></table><div><b>Método de pago:</b> ${pago}</div><div><b>Observaciones:</b> ${obs}</div>
+  <p class="foot">Gracias por confiar en Performance Garage. Te esperamos en tu próximo servicio.</p></body></html>`);
+  w.document.close(); w.focus(); w.print();
+});
+load();
+</script></body></html>
